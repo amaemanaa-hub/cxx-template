@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.15)
 project(engine LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(RUST_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rust_lib)
 set(RUST_TARGET_DIR ${CMAKE_CURRENT_BINARY_DIR}/rust_target)
 set(CXXBRIDGE_DIR ${RUST_TARGET_DIR}/cxxbridge)
+set(CPP_LIBS_DIR "C:/Users/bakhr/Desktop/c++")
+set(VULKAN_SDK "C:/VulkanSDK/1.4.357.0")
 
 find_program(CXXBRIDGE cxxbridge REQUIRED)
 
@@ -18,7 +20,6 @@ add_custom_command(
     COMMAND ${CXXBRIDGE} ${RUST_LIB_DIR}/src/lib.rs --header > ${CXXBRIDGE_DIR}/rust_lib/src/lib.rs.h
     COMMAND ${CXXBRIDGE} ${RUST_LIB_DIR}/src/lib.rs > ${CXXBRIDGE_DIR}/rust_lib/src/lib.rs.cc
     DEPENDS ${RUST_LIB_DIR}/src/lib.rs
-    COMMENT "Generating cxx bridge"
 )
 
 add_custom_command(
@@ -26,7 +27,6 @@ add_custom_command(
     COMMAND cargo build --release --target-dir=${RUST_TARGET_DIR}
     WORKING_DIRECTORY ${RUST_LIB_DIR}
     DEPENDS ${RUST_LIB_DIR}/src/lib.rs ${RUST_LIB_DIR}/Cargo.toml
-    COMMENT "Building Rust static library"
 )
 
 add_custom_target(rust_build
@@ -59,7 +59,20 @@ add_dependencies(rust_bridge rust_build)
 add_executable(engine src/main.cpp)
 
 target_include_directories(engine PRIVATE
-    ${CXXBRIDGE_DIR}  
+    ${CXXBRIDGE_DIR}
+    ${CPP_LIBS_DIR}
+    ${VULKAN_SDK}/Include
 )
 
-target_link_libraries(engine rust_bridge)
+target_link_libraries(engine
+    rust_bridge
+    ${CPP_LIBS_DIR}/libs/glfw3.lib
+    opengl32
+    user32
+    gdi32
+    shell32
+    advapi32
+    ole32
+    ${VULKAN_SDK}/Lib/vulkan-1.lib
+    ${CPP_LIBS_DIR}/libs/Jolt.lib
+)
